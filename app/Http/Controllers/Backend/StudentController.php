@@ -145,10 +145,10 @@ class StudentController extends Controller
 
             // Both can exist
             'photo'              => $photo,
-            'capturephoto'       => $capturePhoto,
+            //'capturephoto'       => $capturePhoto,
 
-            'capture_background' => $request->capture_background ?? 'Sky Blue',
-            'captured_by_camera' => $capturedByCamera,
+            //'capture_background' => $request->capture_background ?? 'Sky Blue',
+            //'captured_by_camera' => $capturedByCamera,
         ]);
 
         return redirect()

@@ -183,7 +183,15 @@
                                Card Sample
                             </p>
                         </a>
-                    </li>
+                        </li>
+                        <li class="nav-item">
+                        <a href="{{ route('idcard.editor') }}"
+                        class="nav-link {{ request()->routeIs('idcard.editor.*') ? 'active' : '' }}">
+
+                            <i class="nav-icon fas fa-layer-group"></i>
+                            <p>ID Card Templates</p>
+                        </a>
+                        </li>
 
                     @endif
                     @if(session('role') === 'superadmin')
