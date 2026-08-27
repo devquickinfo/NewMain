@@ -1,0 +1,175 @@
+<?php
+
+namespace App\Http\Controllers\Backend;
+use App\Http\Controllers\Controller;
+use App\Models\Student;
+use App\Models\StudentClass;
+use App\Models\Section;
+use App\Models\School;
+use App\Models\SelectedSample;
+use App\Models\UploadSample;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use App\Models\Mainidcard;
+
+class IdCardController extends Controller
+{
+    public function index(Request $request)
+    {
+        $schoolId = Auth::user()->school_id ?? session('viewing_school');
+        $classes = StudentClass::
+            orderBy('id', 'ASC')
+            ->get();
+        $sections = Section::selectRaw('MIN(id) as id, name')
+            ->groupBy('name')
+            ->orderBy('id', 'ASC')
+            ->get();
+        if($request->has('per_page') && is_numeric($request->input('per_page'))){
+            $perPage = (int)$request->input('per_page');
+        } else {
+            $perPage = 20; 
+        }
+        $students = $this->buildStudentQuery($request, $schoolId)
+            ->paginate($perPage);
+
+        return view('schools.createidcard', compact(
+            'classes',
+            'sections',
+            'students',
+            'perPage',
+        ));
+    }
+
+    public function searchStudents(Request $request)
+    {
+        $schoolId = Auth::user()->school_id;
+
+        $students = $this->buildStudentQuery($request, $schoolId)
+            ->get();
+
+        return view('schools.partials.student_rows', compact('students'))->render();
+    }
+
+    
+    public function generate(Request $request)
+    {
+        $schoolId = Auth::user()->school_id;
+
+        $studentIds = $request->input('student_ids', []);
+
+        if (empty($studentIds)) {
+            return redirect()->back()->with('error', 'Please select at least one student.');
+        }
+
+        $students = Student::with(['studentClass', 'section'])
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $studentIds)
+            ->orderBy('first_name')
+            ->get();
+
+        $school = School::find($schoolId);
+
+        // Whitelist so an unexpected value never produces a broken/blank card
+        $allowedTemplates = ['sky_blue', 'blue', 'green', 'red', 'custom'];
+        $template = $request->input('background_template', 'sky_blue');
+        $template = in_array($template, $allowedTemplates) ? $template : 'sky_blue';
+
+        $orientation = $request->input('orientation', 'horizontal');
+        $orientation = in_array($orientation, ['horizontal', 'vertical']) ? $orientation : 'horizontal';
+
+        // Cards per A4 page — tuned to each card shape so the grid fills exactly
+        $cardsPerPage = $orientation === 'vertical' ? 12 : 10;
+
+        $students->each(function ($student) {
+            $student->idcardprinted = 'yes';
+            $student->save();
+        });
+
+        return response()
+        ->view('schools.generated_id_cards', [
+            'students' => $students,
+            'school' => $school,
+            'template' => $template,
+            'orientation' => $orientation,
+            'cardsPerPage' => $cardsPerPage,
+        ])
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
+    }
+    public function editIDCard(Request $request)
+    {
+         $schoolId = Auth::user()->school_id ?? session('viewing_school');
+         $selectid =SelectedSample::where('school_id',$schoolId)->pluck('sample_id')->toArray();
+         $selectedSample = UploadSample::whereIn('id', $selectid)->first();
+         $school = School::find($schoolId);
+         $idCardData=Mainidcard::where('school_id',$schoolId)->first();
+         if($idCardData){
+            $designcard=$idCardData;
+         } else {
+            $designcard = null;
+         }
+         return response()
+        ->view('IDCards.editor', compact('schoolId','selectedSample','designcard','school'))
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
+    }
+
+    protected function buildStudentQuery(Request $request, $schoolId)
+    {
+        $search = trim($request->input('search', $request->input('student_search', '')));
+        return Student::with(['studentClass', 'section'])
+            ->where('school_id', $schoolId)
+            ->when($request->filled('class_id'), function ($query) use ($request) {
+                $query->where('class_id', $request->class_id);
+            })
+            ->when($request->filled('section_id'), function ($query) use ($request) {
+                $query->where('section_id', $request->section_id);
+            })
+            ->when($request->filled('photo'), function ($query) use ($request) {
+                if ($request->photo === 'available') {
+                    $query->where(function ($query) {
+                        $query->where(function ($q) {
+                            $q->whereNotNull('photo')
+                                ->where('photo', '!=', '');
+                        })
+                            ->orWhere(function ($q) {
+                                $q->whereNotNull('capturephoto')
+                                    ->where('capturephoto', '!=', '');
+                            });
+                    });
+                }
+
+                if ($request->photo === 'not_available') {
+                    $query->where(function ($query) {
+                        $query->where(function ($q) {
+                            $q->whereNull('photo')
+                                ->orWhere('photo', '');
+                        })
+                            ->where(function ($q) {
+                                $q->whereNull('capturephoto')
+                                    ->orWhere('capturephoto', '');
+                            });
+                    });
+                }
+            })
+            ->when($request->filled('printed'), function ($query) use ($request) {
+                if ($request->printed === 'yes') {
+                    $query->where('idcardprinted', 'yes');
+                } elseif ($request->printed === 'no') {
+                    $query->where('idcardprinted', 'no');
+                }
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('first_name', 'LIKE', '%' . $search . '%')
+                        ->orWhere('last_name', 'LIKE', '%' . $search . '%')
+                        ->orWhere('admission_no', 'LIKE', '%' . $search . '%');
+                });
+            })
+            ->orderBy('first_name');
+    }
+}
+
