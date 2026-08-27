@@ -13,7 +13,9 @@ use App\Http\Controllers\UploadSampleController;
 use App\Http\Controllers\IdCardTemplateController;
 use App\Http\Controllers\MainidcardController;
 
-
+Route::get('/check', function () {
+    return view('check');
+});
 
 Route::get('/', function () {
     return view('frontend.login');

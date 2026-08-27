@@ -35,12 +35,14 @@
     <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+    
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <div class="d-md-none w-100 text-right mb-2">
         <button class="btn btn-sm btn-outline-light" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="true" aria-label="Close navigation">
           <i class="fas fa-times"></i>
         </button>
-      </div>
+    </div>
+    
     <ul class="navbar-nav ml-auto">
       <li class="nav-item d-flex align-items-center">
           <a class="nav-link p-0 d-flex align-items-center" href="#">
@@ -763,7 +765,29 @@ document.addEventListener('DOMContentLoaded', function () {
     updateCardPhoto(imageData);
 });
 </script>
+<script>
+$(document).on('change', '.sample-radio', function () {
 
+    var sampleId = $(this).val();
+    var orientation = $(this).data('orientation');
+
+    console.log('Sample:', sampleId);
+    console.log('Orientation:', orientation);
+
+    if (orientation === 'vertical') {
+
+        $('#selected-vertical-sample-id').val(sampleId);
+
+    }
+
+    if (orientation === 'horizontal') {
+
+        $('#selected-horizontal-sample-id').val(sampleId);
+
+    }
+
+});
+</script>
 @yield('scripts')
 
 </body>

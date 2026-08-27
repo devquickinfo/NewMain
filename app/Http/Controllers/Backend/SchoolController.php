@@ -421,27 +421,73 @@ class SchoolController extends Controller
             ->route('schools.index')
             ->with('success', $message);
     }
+    // public function saveSample(Request $request)
+    // {
+       
+    //     $schoolId = Auth::user()->school_id ?? session('viewing_school');
+    //     $sampleId = $request->input('sample_id');
+        
+    //     if (!$schoolId || !$sampleId) {
+    //         return redirect()->back()->with('error', 'Invalid school or sample selection.');
+    //     }
+    //     $existingRecord = SelectedSample::where('school_id', $schoolId)->first();
+    //     if ($existingRecord) {
+    //         // Update the existing record with the new sample ID
+    //         $existingRecord->update(['sample_id' => $sampleId]);
+    //     } else {
+    //         // Create a new record
+    //         SelectedSample::create([
+    //             'school_id' => $schoolId,
+    //             'sample_id' => $sampleId,
+    //         ]);
+    //     }
+    //     return redirect()->back()->with('success', 'Sample selected successfully.');
+    // }
     public function saveSample(Request $request)
     {
-       
         $schoolId = Auth::user()->school_id ?? session('viewing_school');
-        $sampleId = $request->input('sample_id');
-        
-        if (!$schoolId || !$sampleId) {
-            return redirect()->back()->with('error', 'Invalid school or sample selection.');
+
+        $verticalSampleId = $request->input('vertical_sample_id');
+        $horizontalSampleId = $request->input('horizontal_sample_id');
+
+        if (!$schoolId) {
+            return redirect()->back()
+                ->with('error', 'Invalid school selection.');
         }
-        $existingRecord = SelectedSample::where('school_id', $schoolId)->first();
-        if ($existingRecord) {
-            // Update the existing record with the new sample ID
-            $existingRecord->update(['sample_id' => $sampleId]);
-        } else {
-            // Create a new record
-            SelectedSample::create([
-                'school_id' => $schoolId,
-                'sample_id' => $sampleId,
-            ]);
+
+        if (!$verticalSampleId && !$horizontalSampleId) {
+            return redirect()->back()
+                ->with('error', 'Please select at least one sample.');
         }
-        return redirect()->back()->with('success', 'Sample selected successfully.');
+
+        // Save / update vertical sample
+        if ($verticalSampleId) {
+            SelectedSample::updateOrCreate(
+                [
+                    'school_id' => $schoolId,
+                    'orientation' => 'vertical',
+                ],
+                [
+                    'sample_id' => $verticalSampleId,
+                ]
+            );
+        }
+
+        // Save / update horizontal sample
+        if ($horizontalSampleId) {
+            SelectedSample::updateOrCreate(
+                [
+                    'school_id' => $schoolId,
+                    'orientation' => 'horizontal',
+                ],
+                [
+                    'sample_id' => $horizontalSampleId,
+                ]
+            );
+        }
+
+        return redirect()->back()
+            ->with('success', 'Samples selected successfully.');
     }
     public function profileAdmin()
     {

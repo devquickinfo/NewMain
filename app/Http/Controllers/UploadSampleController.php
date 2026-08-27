@@ -16,36 +16,44 @@ class UploadSampleController extends Controller
      */
     public function index()
     {
-        $selectedSample = null;
+        $selectedSamples = collect();
         $alls = collect();
         $defaultSamples = collect();
         $ownSamples = collect();
-        if (session('role') === 'school') {
-            $schoolId = Auth::user()->school_id;
-            $selectedSample = SelectedSample::where(
-                'school_id',
-                $schoolId
-            )->first();
+
+        if (session('role') === 'school' || session('viewing_school')) {
+
+            $schoolId = Auth::user()->school_id ?? session('viewing_school');
+
+            // Get selected vertical + horizontal samples
+            $selectedSamples = SelectedSample::where('school_id', $schoolId)
+                ->pluck('sample_id', 'orientation');
+
             // Admin/default samples
             $defaultSamples = UploadSample::whereNull('school_id')
                 ->get();
-            // Samples uploaded by this school
+
+            // School uploaded samples
             $ownSamples = UploadSample::where('school_id', $schoolId)
                 ->get();
+
         } else {
-            // Admin sees all samples
+
+            // Admin sees all
             $alls = UploadSample::all();
         }
+
         return view(
             'schools.uploadsample',
             compact(
                 'alls',
                 'defaultSamples',
                 'ownSamples',
-                'selectedSample'
+                'selectedSamples'
             )
         );
     }
+   
 
     /**
      * Show the form for creating a new resource.
@@ -121,20 +129,46 @@ class UploadSampleController extends Controller
      */
     public function destroy(UploadSample $uploadSample)
     {
-        
-        Storage::disk('public')->delete($uploadSample->file_path);
+        $schoolId = session('role') === 'school'
+            ? Auth::user()->school_id
+            : session('viewing_school');
+        if (is_null($uploadSample->school_id)) {
+            if (session('role') === 'school') {
+                return redirect()
+                    ->route('upload-samples.index')
+                    ->with('error', 'You cannot delete default samples.');
+            }
+
+        } else {
+            if ($uploadSample->school_id != $schoolId) {
+
+                return redirect()
+                    ->route('upload-samples.index')
+                    ->with('error', 'You are not authorized to delete this sample.');
+            }
+        }
+        if ($uploadSample->file_path) {
+            Storage::disk('public')->delete($uploadSample->file_path);
+        }
         $uploadSample->delete();
-        return redirect()->route('upload-samples.index')->with('success', 'Sample deleted successfully.');
+        return redirect()
+            ->route('upload-samples.index')
+            ->with('success', 'Sample deleted successfully.');
     }
     public function destroyAll()
     {
-        if(session('role') === 'school') {
-            $samples = UploadSample::where('school_id', Auth::user()->school_id)->get();
+        if (session('role') === 'school' || session('viewing_school')) {
+            $schoolId = session('role') === 'school'
+                ? Auth::user()->school_id
+                : session('viewing_school');
+            $samples = UploadSample::where('school_id', $schoolId)->get();
         } else {
             $samples = UploadSample::whereNull('school_id')->get();
         }
         foreach ($samples as $sample) {
-            Storage::disk('public')->delete($sample->file_path);
+            if ($sample->file_path) {
+                Storage::disk('public')->delete($sample->file_path);
+            }
             $sample->delete();
         }
         return redirect()
