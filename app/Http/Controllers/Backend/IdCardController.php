@@ -111,7 +111,7 @@ class IdCardController extends Controller
             $designcard = null;
          }
          return response()
-        ->view('IDCards.editor', compact('schoolId','selectedSample','designcard','school'))
+        ->view('IDCards.inlteeditor', compact('schoolId','selectedSample','designcard','school'))
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         ->header('Pragma', 'no-cache')
         ->header('Expires', '0');

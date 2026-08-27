@@ -178,7 +178,7 @@
                                     </h6>
                                     <a href="{{ route('idcard.editor') }}"
                                     class="btn btn-sm btn-warning ml-auto"
-                                    target="_blank">
+                                    >
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                 </div>
