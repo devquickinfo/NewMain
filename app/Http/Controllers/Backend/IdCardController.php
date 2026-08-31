@@ -98,24 +98,61 @@ class IdCardController extends Controller
         ->header('Pragma', 'no-cache')
         ->header('Expires', '0');
     }
+    // public function editIDCard(Request $request)
+    // {
+    //      $schoolId = Auth::user()->school_id ?? session('viewing_school');
+    //      $selectid =SelectedSample::where('school_id',$schoolId)->pluck('sample_id')->toArray();
+    //      $selectedSample = UploadSample::whereIn('id', $selectid)->first();
+    //      $school = School::find($schoolId);
+    //      $idCardData=Mainidcard::where('school_id',$schoolId)->first();
+    //      if($idCardData){
+    //         $designcard=$idCardData;
+    //      } else {
+    //         $designcard = null;
+    //      }
+    //      return response()
+    //     ->view('IDCards.inlteeditor', compact('schoolId','selectedSample','designcard','school'))
+    //     ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+    //     ->header('Pragma', 'no-cache')
+    //     ->header('Expires', '0');
+    // }
     public function editIDCard(Request $request)
     {
-         $schoolId = Auth::user()->school_id ?? session('viewing_school');
-         $selectid =SelectedSample::where('school_id',$schoolId)->pluck('sample_id')->toArray();
-         $selectedSample = UploadSample::whereIn('id', $selectid)->first();
-         $school = School::find($schoolId);
-         $idCardData=Mainidcard::where('school_id',$schoolId)->first();
-         if($idCardData){
-            $designcard=$idCardData;
-         } else {
-            $designcard = null;
-         }
-         return response()
-        ->view('IDCards.inlteeditor', compact('schoolId','selectedSample','designcard','school'))
-        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        ->header('Pragma', 'no-cache')
-        ->header('Expires', '0');
+        //echo '<pre>';print_r($request->all()); die;
+        $schoolId = Auth::user()->school_id ?? session('viewing_school');
+        $orientation = $request->query('orientation', 'vertical');
+        if (!in_array($orientation, ['vertical', 'horizontal'])) {
+            $orientation = 'vertical';
+        }
+        $selectedSampleId = SelectedSample::where('school_id', $schoolId)
+            ->where('orientation', $orientation)
+            ->value('sample_id');
+        $selectedSample = null;
+        if ($selectedSampleId) {
+            $selectedSample = UploadSample::find($selectedSampleId);
+        }
+        $school = School::find($schoolId);
+        $idCardData = Mainidcard::where('school_id', $schoolId)->where('orientation',$request->orientation)->first();
+        $designcard = $idCardData ?: null;
+        return response()
+            ->view(
+                'IDCards.inlteeditor',
+                compact(
+                    'schoolId',
+                    'selectedSample',
+                    'designcard',
+                    'school',
+                    'orientation'
+                )
+            )
+            ->header(
+                'Cache-Control',
+                'no-store, no-cache, must-revalidate, max-age=0'
+            )
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
+   
 
     protected function buildStudentQuery(Request $request, $schoolId)
     {

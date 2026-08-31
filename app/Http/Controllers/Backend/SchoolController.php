@@ -140,16 +140,50 @@ class SchoolController extends Controller
             session(['viewing_school' => $school->id]);
         }
         $school_id = Auth::user()->school_id ?? session('viewing_school');
-        $idcardsample = null;
-        $selectedSample = SelectedSample::where('school_id', $school_id)->first();
-        if ($selectedSample) {
-            $idcardsample = UploadSample::where('id', $selectedSample->sample_id)->first();
+        // $idcardsample = null;
+        // $selectedSample = SelectedSample::where('school_id', $school_id)->first();
+        // if ($selectedSample) {
+        //     $idcardsample = UploadSample::where('id', $selectedSample->sample_id)->first();
+        // }
+        // Vertical selected sample
+        $verticalSelectedSample = SelectedSample::where('school_id', $school_id)
+            ->where('orientation', 'vertical')
+            ->first();
+
+        $verticalSample = null;
+
+        if ($verticalSelectedSample) {
+            $verticalSample = UploadSample::where(
+                'id',
+                $verticalSelectedSample->sample_id
+            )->first();
         }
 
-        // Prefer main saved ID card for the school if present
-        $mainidcard = Mainidcard::where('school_id', $school->id)->first();
 
-        return view('schools.show', compact('school', 'classes', 'idcardsample', 'mainidcard'));
+        // Horizontal selected sample
+        $horizontalSelectedSample = SelectedSample::where('school_id', $school_id)
+            ->where('orientation', 'horizontal')
+            ->first();
+
+        $horizontalSample = null;
+
+        if ($horizontalSelectedSample) {
+            $horizontalSample = UploadSample::where(
+                'id',
+                $horizontalSelectedSample->sample_id
+            )->first();
+        }
+
+        //$mainidcard = Mainidcard::where('school_id', $school->id)->first();
+        $verticalDesign = Mainidcard::where('school_id', $school->id)
+            ->where('orientation', 'vertical')
+            ->first();
+
+        $horizontalDesign = Mainidcard::where('school_id', $school->id)
+            ->where('orientation', 'horizontal')
+            ->first();
+
+        return view('schools.show', compact('school', 'classes','verticalSample','horizontalSample','verticalDesign','horizontalDesign'));
     }
 
     public function edit(School $school)

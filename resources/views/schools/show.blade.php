@@ -3,42 +3,32 @@
 @section('content')
 <style>
     .id-card-template {
-        margin:0px;
-        padding:0px;
-      
+        width: 350px;
+        height: 220px;
+        object-fit: contain;
+        display: block;
     }
+
     .id-card-section {
         width: 100%;
     }
 
     .id-card-preview {
-        margin:0px;
-        padding:0px;
+        width: 100%;
         display: flex;
         justify-content: flex-start;
         align-items: center;
     }
 
-   
+    .id-card-template {
+        width: auto;
+        max-width: 100%;
+        /* height: auto; */
+        display: block;
+        max-height: 300px;
 
+    }
 </style>
-
-@if(request()->query('debug'))
-    <style>
-        /* Debug: visually highlight every rendered field inside the card preview */
-        .id-card-template [id^="el"] {
-            outline: 2px solid rgba(0,128,255,0.35) !important;
-            background: rgba(0,0,0,0.02) !important;
-            z-index: 999 !important;
-            box-sizing: border-box;
-        }
-        .id-card-template [id^="el"] img {
-            display: block !important;
-            max-width: 100% !important;
-            height: auto !important;
-        }
-    </style>
-@endif
 <div class="content-wrapper">
     <section class="content-header">
         <div class="container-fluid">
@@ -74,19 +64,18 @@
                         </div>
                         <div class="ml-auto d-flex align-items-center">
                             @if($school->status)
-                                <span class="badge badge-success px-3 py-2 mr-2">
-                                    <i class="fas fa-check-circle mr-1"></i> Active
-                                </span>
+                            <span class="badge badge-success px-3 py-2 mr-2">
+                                <i class="fas fa-check-circle mr-1"></i> Active
+                            </span>
                             @else
-                                <span class="badge badge-danger px-3 py-2 mr-2">
-                                    <i class="fas fa-times-circle mr-1"></i> Inactive
-                                </span>
+                            <span class="badge badge-danger px-3 py-2 mr-2">
+                                <i class="fas fa-times-circle mr-1"></i> Inactive
+                            </span>
                             @endif
                             @if(Auth::user()?->role === 'superadmin')
-                                <a href="{{ route('schools.edit', $school) }}"
-                                class="btn btn-warning btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                            <a href="{{ route('schools.edit', $school) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             @endif
                         </div>
                     </div>
@@ -106,11 +95,10 @@
                                 </h5>
                             </div>
                             @if(Auth::user()?->role === 'superadmin')
-                                <a href="{{ route('schools.index') }}"
-                                class="btn btn-info btn-sm ml-auto flex-shrink-0">
-                                    <i class="fas fa-arrow-left"></i>
-                                    <span class="d-none d-sm-inline ml-1">Back</span>
-                                </a>
+                            <a href="{{ route('schools.index') }}" class="btn btn-info btn-sm ml-auto flex-shrink-0">
+                                <i class="fas fa-arrow-left"></i>
+                                <span class="d-none d-sm-inline ml-1">Back</span>
+                            </a>
                             @endif
                         </div>
                     </div>
@@ -119,14 +107,13 @@
                             <div class="school-logo-box">
 
                                 @if($school->logo)
-                                    <img src="{{ Storage::disk('public')->url($school->logo) }}"
-                                        alt="School Logo"
-                                        class="school-logo">
+                                <img src="{{ Storage::disk('public')->url($school->logo) }}" alt="School Logo"
+                                    class="school-logo">
                                 @else
-                                    <div class="no-logo">
-                                        <i class="fas fa-school"></i>
-                                        <span>No Logo</span>
-                                    </div>
+                                <div class="no-logo">
+                                    <i class="fas fa-school"></i>
+                                    <span>No Logo</span>
+                                </div>
                                 @endif
 
                             </div>
@@ -174,178 +161,477 @@
                                 <div class="d-flex align-items-center mb-2">
                                     <h6 class="section-title mb-0">
                                         <i class="fas fa-id-card mr-2"></i>
-                                        Live ID Card Preview
+                                        Live ID Card Preview Click Card to Edit
                                     </h6>
-                                    <a href="{{ route('idcard.editor') }}"
-                                    class="btn btn-sm btn-warning ml-auto"
-                                    >
+                                    <!-- <a href="{{ route('idcard.editor', ['orientation' => 'vertical']) }}"
+                                        id="editIdCardBtn" class="btn btn-sm btn-warning ml-auto" target="_blank">
                                         <i class="fas fa-edit"></i> Edit
-                                    </a>
+                                    </a> -->
                                 </div>
-                               @if(isset($mainidcard) && $mainidcard && $mainidcard->layout && is_array($mainidcard->layout) && isset($mainidcard->layout['fields']))
-                                    <div class="id-card-preview">
+                                <ul class="nav nav-tabs mb-3" role="tablist">
+
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="vertical-tab" data-toggle="tab"
+                                            href="#vertical-card" role="tab">
+
+                                            <i class="fas fa-mobile-alt mr-1"></i>
+                                            Vertical
+
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="horizontal-tab" data-toggle="tab"
+                                            href="#horizontal-card" role="tab">
+
+                                            <i class="fas fa-mobile-alt fa-rotate-90 mr-1"></i>
+                                            Horizontal
+
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+
+                                <div class="tab-content">
+
+                                    {{-- ===================================================== --}}
+                                    {{-- VERTICAL --}}
+                                    {{-- ===================================================== --}}
+
+                                    <div class="tab-pane fade show active" id="vertical-card" role="tabpanel">
+
+                                        @if($verticalDesign && is_array($verticalDesign->layout))
+
                                         @php
-                                            $layout = $mainidcard->layout;
-                                            $bgUrl = asset('storage/' . $idcardsample->file_path);
+                                        $layout = $verticalDesign->layout;
 
-                                            $cardW = $mainidcard->card_width ?? ($layout['cardWidth'] ?? 700);
-                                            $cardH = $mainidcard->card_height ?? ($layout['cardHeight'] ?? 450);
-                                            $previewW = 317;
-                                            $previewH = 204;
-                                            $scale = min($previewW / max($cardW, 1), $previewH / max($cardH, 1), 1);
-                                            $scaleCss = number_format($scale, 3, '.', '');
+                                        $cardW = $verticalDesign->card_width
+                                        ?? ($layout['cardWidth'] ?? 204);
 
-                                            // Sort fields so shape elements render behind text and image elements
-                                            $fields = $layout['fields'];
-                                            uksort($fields, function($a, $b) use ($fields) {
-                                                $typeA = $fields[$a]['type'] ?? '';
-                                                $typeB = $fields[$b]['type'] ?? '';
-                                                if ($typeA === 'shape' && $typeB !== 'shape') return -1;
-                                                if ($typeA !== 'shape' && $typeB === 'shape') return 1;
-                                                return 0;
-                                            });
+                                        $cardH = $verticalDesign->card_height
+                                        ?? ($layout['cardHeight'] ?? 317);
+
+                                        $previewW = 204;
+                                        $previewH = 317;
+
+                                        $scale = min(
+                                        $previewW / max($cardW, 1),
+                                        $previewH / max($cardH, 1),
+                                        1
+                                        );
+
+                                        $fields = $layout['fields'] ?? [];
+
+                                        if (!empty($verticalDesign->background)) {
+                                        $bgUrl = asset(
+                                        'storage/' . $verticalDesign->background
+                                        );
+                                        } elseif ($verticalSample) {
+                                        $bgUrl = asset(
+                                        'storage/' . $verticalSample->file_path
+                                        );
+                                        } else {
+                                        $bgUrl = '';
+                                        }
                                         @endphp
 
-                                        <div class="id-card-template img-fluid img-thumbnail" style="position:relative; width:{{$previewW}}px; height:{{$previewH}}px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
 
-                                            <div style="width:{{ $cardW }}px; height:{{ $cardH }}px; transform: scale({{ $scaleCss }}); transform-origin: top left; margin:auto; position:relative; background-image: url('{{ $bgUrl }}'); background-size:100% 100%; background-repeat:no-repeat;">
+                                        <div class="id-card-preview text-center">
 
-                                                @foreach($fields as $key => $field)
+                                            <a href="{{ route('idcard.editor', ['orientation' => 'vertical']) }}"
+                                                target="_blank" title="Edit Vertical ID Card"
+                                                style="display:inline-block;">
 
-                                                    @php
-                                                        $elId = 'el' . ucfirst($key);
-                                                        $type = $field['type'] ?? 'text';
+                                                <div style="
+                        width:{{ $previewW }}px;
+                        height:{{ $previewH }}px;
+                        overflow:hidden;
+                        position:relative;
+                        margin:auto;
+                        cursor:pointer;
+                    ">
 
-                                                        // Always define $left, $top, $width, $height
-                                                        $left = isset($field['x']) ? (int)$field['x'] : 0;
-                                                        $top = isset($field['y']) ? (int)$field['y'] : 0;
-                                                        $width = isset($field['width']) ? (int)$field['width'] : null;
-                                                        $height = isset($field['height']) ? (int)$field['height'] : null;
-                                                        $visible = $field['visible'] ?? true;
+                                                    <div style="
+                            width:{{ $cardW }}px;
+                            height:{{ $cardH }}px;
+                            position:relative;
+                            transform:scale({{ $scale }});
+                            transform-origin:top left;
+                            background-image:url('{{ $bgUrl }}');
+                            background-size:100% 100%;
+                            background-repeat:no-repeat;
+                            overflow:hidden;
+                            box-shadow:0 8px 24px rgba(0,0,0,.25);
+                            border-radius:6px;
+                        ">
 
-                                                        // Give shapes low z-index (1) and text/images higher z-index (10)
-                                                        $zIndex = ($type === 'shape') ? 1 : 10;
-                                                        $style = "position:absolute; left:{$left}px; top:{$top}px; z-index:{$zIndex};";
-
-                                                        if ($width) {
-                                                            $style .= " width:{$width}px;";
-                                                        }
-                                                        if ($height) {
-                                                            $style .= " height:{$height}px;";
-                                                        }
-                                                        if (!$visible) {
-                                                            $style .= " display:none;";
-                                                        }
-                                                    @endphp
-
-                                                    {{-- IMAGE --}}
-                                                    @if($type === 'image')
+                                                        @foreach($fields as $key => $field)
 
                                                         @php
-                                                            $src = '';
-                                                            if (!empty($field['src'])) {
-                                                                if (preg_match('/^https?:\/\//', $field['src'])) {
-                                                                    $src = $field['src'];
-                                                                } else {
-                                                                    $src = Storage::disk('public')->url($field['src']);
-                                                                }
-                                                            }
+                                                        $type = $field['type'] ?? 'text';
+
+                                                        $left = (int)($field['x'] ?? 0);
+                                                        $top = (int)($field['y'] ?? 0);
+
+                                                        $width = isset($field['width'])
+                                                        ? (int)$field['width']
+                                                        : null;
+
+                                                        $height = isset($field['height'])
+                                                        ? (int)$field['height']
+                                                        : null;
+
+                                                        $visible = $field['visible'] ?? true;
+
+                                                        $zIndex = $type === 'shape'
+                                                        ? 1
+                                                        : 10;
+
+                                                        $style = "
+                                                        position:absolute;
+                                                        left:{$left}px;
+                                                        top:{$top}px;
+                                                        z-index:{$zIndex};
+                                                        ";
+
+                                                        if ($width) {
+                                                        $style .= "width:{$width}px;";
+                                                        }
+
+                                                        if ($height) {
+                                                        $style .= "height:{$height}px;";
+                                                        }
+
+                                                        if (!$visible) {
+                                                        $style .= "display:none;";
+                                                        }
+                                                        @endphp
+
+
+                                                        {{-- IMAGE --}}
+                                                        @if($type === 'image')
+
+                                                        @php
+                                                        $src = '';
+
+                                                        if (!empty($field['src'])) {
+
+                                                        if (preg_match(
+                                                        '/^https?:\/\//',
+                                                        $field['src']
+                                                        )) {
+                                                        $src = $field['src'];
+                                                        } else {
+                                                        $src = Storage::disk('public')
+                                                        ->url($field['src']);
+                                                        }
+                                                        }
                                                         @endphp
 
                                                         @if($src)
-                                                            <img
-                                                                id="{{ $elId }}"
-                                                                src="{{ $src }}"
-                                                                alt="{{ $key }}"
-                                                                style="{{ $style }} object-fit:contain;"
-                                                            >
+                                                        <img src="{{ $src }}" alt="{{ $key }}"
+                                                            style="{{ $style }}object-fit:contain;">
                                                         @endif
 
-                                                    {{-- SHAPE --}}
-                                                    @elseif($type === 'shape')
+
+                                                        {{-- SHAPE --}}
+                                                        @elseif($type === 'shape')
 
                                                         @php
-                                                            $backgroundColor = $field['backgroundColor'] ?? 'transparent';
-                                                            $opacity = isset($field['opacity']) ? (float)$field['opacity'] : 1;
-                                                            $borderRadius = isset($field['borderRadius']) ? (int)$field['borderRadius'] : 0;
+                                                        $backgroundColor =
+                                                        $field['backgroundColor']
+                                                        ?? 'transparent';
 
-                                                            $style .= " background-color:{$backgroundColor}; opacity:{$opacity}; border-radius:{$borderRadius}px; box-sizing:border-box;";
+                                                        $opacity =
+                                                        isset($field['opacity'])
+                                                        ? (float)$field['opacity']
+                                                        : 1;
+
+                                                        $borderRadius =
+                                                        isset($field['borderRadius'])
+                                                        ? (int)$field['borderRadius']
+                                                        : 0;
+
+                                                        $style .= "
+                                                        background-color:{$backgroundColor};
+                                                        opacity:{$opacity};
+                                                        border-radius:{$borderRadius}px;
+                                                        box-sizing:border-box;
+                                                        ";
                                                         @endphp
 
-                                                        <div id="{{ $elId }}" style="{{ $style }}"></div>
+                                                        <div style="{{ $style }}"></div>
 
-                                                    {{-- TEXT --}}
-                                                    @else
+
+                                                        {{-- TEXT --}}
+                                                        @else
 
                                                         @php
-                                                            $text = $field['text'] ?? '';
-                                                            $fs = isset($field['fontSize']) ? (int)$field['fontSize'] : null;
-                                                            $color = $field['color'] ?? null;
-                                                            $fw = $field['fontWeight'] ?? null;
+                                                        $text = $field['text'] ?? '';
 
-                                                            if ($fs) { $style .= " font-size:{$fs}px;"; }
-                                                            if ($color) { $style .= " color:{$color};"; }
-                                                            if ($fw) { $style .= " font-weight:{$fw};"; }
+                                                        if (isset($field['fontSize'])) {
+                                                        $style .=
+                                                        'font-size:' .
+                                                        (int)$field['fontSize'] .
+                                                        'px;';
+                                                        }
+
+                                                        if (!empty($field['color'])) {
+                                                        $style .=
+                                                        'color:' .
+                                                        $field['color'] .
+                                                        ';';
+                                                        }
+
+                                                        if (!empty($field['fontWeight'])) {
+                                                        $style .=
+                                                        'font-weight:' .
+                                                        $field['fontWeight'] .
+                                                        ';';
+                                                        }
                                                         @endphp
 
-                                                        <div id="{{ $elId }}" style="{{ $style }}">{!! e($text) !!}</div>
-
-                                                    @endif
-
-                                                    {{-- Custom CSS --}}
-                                                    @if(!empty($field['css']))
-                                                        <style>
-                                                            #{{ $elId }} {
-                                                                {!! $field['css'] !!}
-                                                            }
-                                                        </style>
-                                                    @endif
-
-                                                @endforeach
-
-                                                @if(request()->query('debug'))
-                                                    @foreach($layout['fields'] as $key => $field)
-                                                        @php
-                                                            $dbgLeft = isset($field['x']) ? (int)$field['x'] : 0;
-                                                            $dbgTop = isset($field['y']) ? (int)$field['y'] : 0;
-                                                            $dbgW = isset($field['width']) ? (int)$field['width'] : 80;
-                                                            $dbgH = isset($field['height']) ? (int)$field['height'] : 24;
-                                                            $dbgId = 'dbg_' . $key;
-                                                            $dbgText = (isset($field['type']) && $field['type'] === 'image') 
-                                                                ? 'img ' . ($field['src'] ? 'has-src' : 'no-src')
-                                                                : 'txt ' . (isset($field['text']) ? e(substr($field['text'], 0, 20)) : 'no-text');
-                                                        @endphp
-
-                                                        <div id="{{ $dbgId }}" style="position:absolute; left:{{ $dbgLeft }}px; top:{{ $dbgTop }}px; width:{{ max(20,$dbgW) }}px; height:{{ max(16,$dbgH) }}px; background:rgba(255,0,0,0.12); border:1px dashed rgba(255,0,0,0.6); color:#900; font-size:10px; padding:2px; box-sizing:border-box; z-index:9999;">
-                                                            <strong style="font-size:10px">{{ $key }}</strong><br>
-                                                            <span style="font-size:10px">{{ $dbgText }}</span>
+                                                        <div style="{{ $style }}">
+                                                            {!! e($text) !!}
                                                         </div>
-                                                    @endforeach
-                                                @endif
 
-                                            </div>
+                                                        @endif
+
+                                                        @endforeach
+
+                                                    </div>
+
+                                                </div>
+
+                                            </a>
 
                                         </div>
-                                    </div>
 
-                                    @if(request()->query('debug'))
-                                        <div style="margin-top:12px; max-height:240px; overflow:auto; background:#f8f9fa; padding:8px; border:1px solid #eee;">
-                                            <strong>Saved layout JSON</strong>
-                                            <pre style="white-space:pre-wrap; word-break:break-word; font-size:12px;">{{ json_encode($layout, JSON_PRETTY_PRINT) }}</pre>
+
+                                        @elseif($verticalSample)
+
+                                        {{-- No saved design --}}
+                                        <div class="id-card-preview text-center">
+
+                                            <a href="{{ route('idcard.editor', ['orientation' => 'vertical']) }}"
+                                                target="_blank">
+
+                                                <img src="{{ asset('storage/' . $verticalSample->file_path) }}"
+                                                    alt="Vertical ID Card" class="img-thumbnail" style="
+                            width:204px;
+                            height:317px;
+                            object-fit:fill;
+                            cursor:pointer;
+                        ">
+
+                                            </a>
+
                                         </div>
-                                    @endif
 
-                                @elseif($idcardsample)
-                                    {{-- Fallback UI --}}
+                                        @else
 
-                                    <div class="id-card-preview">
-                                        <img src="{{ asset('storage/' . $idcardsample->file_path) }}" class="id-card-template img-fluid img-thumbnail" alt="ID Card Template">
+                                        <div class="alert alert-warning">
+                                            No vertical ID card sample selected.
+                                        </div>
+
+                                        @endif
+
                                     </div>
-                                @else
-                                    <div class="alert alert-warning">
-                                        No ID card sample selected.
+
+
+
+                                    {{-- ===================================================== --}}
+                                    {{-- HORIZONTAL --}}
+                                    {{-- ===================================================== --}}
+
+                                    <div class="tab-pane fade" id="horizontal-card" role="tabpanel">
+
+                                        @if($horizontalDesign && is_array($horizontalDesign->layout))
+
+                                        @php
+                                        $layout = $horizontalDesign->layout;
+
+                                        $cardW = $horizontalDesign->card_width
+                                        ?? ($layout['cardWidth'] ?? 317);
+
+                                        $cardH = $horizontalDesign->card_height
+                                        ?? ($layout['cardHeight'] ?? 204);
+
+                                        $previewW = 317;
+                                        $previewH = 204;
+
+                                        $scale = min(
+                                        $previewW / max($cardW, 1),
+                                        $previewH / max($cardH, 1),
+                                        1
+                                        );
+                                        $fields = $layout['fields'] ?? [];
+                                        if (!empty($horizontalDesign->background)) {
+                                        $bgUrl = asset(
+                                        'storage/' . $horizontalDesign->background
+                                        );
+                                        } elseif ($horizontalSample) {
+                                        $bgUrl = asset(
+                                        'storage/' . $horizontalSample->file_path
+                                        );
+                                        } else {
+                                        $bgUrl = '';
+                                        }
+                                        @endphp
+                                        <div class="id-card-preview text-center">
+                                            <a href="{{ route('idcard.editor', ['orientation' => 'horizontal']) }}"
+                                                target="_blank" title="Edit Horizontal ID Card"
+                                                style="display:inline-block;">
+
+                                                <div style="
+                                                    width:{{ $previewW }}px;
+                                                    height:{{ $previewH }}px;
+                                                    overflow:hidden;
+                                                    position:relative;
+                                                    margin:auto;
+                                                    cursor:pointer;
+                                                ">
+                                                <div style="
+                                                        width:{{ $cardW }}px;
+                                                        height:{{ $cardH }}px;
+                                                        position:relative;
+                                                        transform:scale({{ $scale }});
+                                                        transform-origin:top left;
+                                                        background-image:url('{{ $bgUrl }}');
+                                                        background-size:100% 100%;
+                                                        background-repeat:no-repeat;
+                                                        overflow:hidden;
+                                                        box-shadow:0 8px 24px rgba(0,0,0,.25);
+                                                        border-radius:6px;
+                                                ">
+                                                        @foreach($fields as $key => $field)
+                                                        @php
+                                                        $type = $field['type'] ?? 'text';
+                                                        $left = (int)($field['x'] ?? 0);
+                                                        $top = (int)($field['y'] ?? 0);
+                                                        $width = isset($field['width'])
+                                                        ? (int)$field['width']
+                                                        : null;
+                                                        $height = isset($field['height'])
+                                                        ? (int)$field['height']
+                                                        : null;
+                                                        $visible = $field['visible'] ?? true;
+                                                        $zIndex = $type === 'shape'
+                                                        ? 1
+                                                        : 10;
+                                                        $style = "
+                                                        position:absolute;
+                                                        left:{$left}px;
+                                                        top:{$top}px;
+                                                        z-index:{$zIndex};
+                                                        ";
+                                                        if ($width) {
+                                                        $style .= "width:{$width}px;";
+                                                        }
+                                                        if ($height) {
+                                                        $style .= "height:{$height}px;";
+                                                        }
+                                                        if (!$visible) {
+                                                        $style .= "display:none;";
+                                                        }
+                                                        @endphp
+                                                        @if($type === 'image')
+                                                        @php
+                                                        $src = '';
+                                                        if (!empty($field['src'])) {
+                                                        if (preg_match(
+                                                        '/^https?:\/\//',
+                                                        $field['src']
+                                                        )) {
+                                                        $src = $field['src'];
+                                                        } else {
+                                                        $src = Storage::disk('public')
+                                                        ->url($field['src']);
+                                                        }
+                                                        }
+                                                        @endphp
+                                                        @if($src)
+                                                        <img src="{{ $src }}" alt="{{ $key }}"
+                                                            style="{{ $style }}object-fit:contain;">
+                                                        @endif
+                                                        @elseif($type === 'shape')
+                                                        @php
+                                                        $backgroundColor =
+                                                        $field['backgroundColor']
+                                                        ?? 'transparent';
+                                                        $opacity =
+                                                        isset($field['opacity'])
+                                                        ? (float)$field['opacity']
+                                                        : 1;
+
+                                                        $borderRadius =
+                                                        isset($field['borderRadius'])
+                                                        ? (int)$field['borderRadius']
+                                                        : 0;
+
+                                                        $style .= "
+                                                        background-color:{$backgroundColor};
+                                                        opacity:{$opacity};
+                                                        border-radius:{$borderRadius}px;
+                                                        box-sizing:border-box;
+                                                        ";
+                                                        @endphp
+                                                        <div style="{{ $style }}"></div>
+                                                        @else
+                                                        @php
+                                                        $text = $field['text'] ?? '';
+                                                        if (isset($field['fontSize'])) {
+                                                        $style .=
+                                                        'font-size:' .
+                                                        (int)$field['fontSize'] .
+                                                        'px;';
+                                                        }
+
+                                                        if (!empty($field['color'])) {
+                                                        $style .=
+                                                        'color:' .
+                                                        $field['color'] .
+                                                        ';';
+                                                        }
+
+                                                        if (!empty($field['fontWeight'])) {
+                                                        $style .=
+                                                        'font-weight:' .
+                                                        $field['fontWeight'] .
+                                                        ';';
+                                                        }
+                                                        @endphp
+                                                        <div style="{{ $style }}">
+                                                            {!! e($text) !!}
+                                                        </div>
+                                                        @endif
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        @elseif($horizontalSample)
+                                        <div class="id-card-preview text-center">
+                                            <a href="{{ route('idcard.editor', ['orientation' => 'horizontal']) }}"
+                                                target="_blank">
+
+                                                <img src="{{ asset('storage/' . $horizontalSample->file_path) }}"
+                                                    alt="Horizontal ID Card" class="img-thumbnail" style="
+                                                    width:317px;
+                                                    height:204px;
+                                                    object-fit:fill;
+                                                    cursor:pointer;
+                                                ">
+                                            </a>
+                                        </div>
+                                        @else
+                                        <div class="alert alert-warning">
+                                            No horizontal ID card sample selected.
+                                        </div>
+                                        @endif
                                     </div>
-                                @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -357,33 +643,38 @@
                 </div>
                 <div class="card-body">
                     @if($classes->isEmpty())
-                        <p class="text-muted">No classes or sections found for this school.</p>
+                    <p class="text-muted">No classes or sections found for this school.</p>
                     @else
-                        <div class="row">
-                            @foreach($classes as $class)
-                                <div class="col-md-4 mb-4">
-                                    <a href="{{ route('schools.classes.students', ['school' => $school, 'class' => $class]) }}" class="text-decoration-none text-dark">
-                                        <div class="card h-100 cursor-pointer">
-                                            <div class="card-header bg-primary text-white d-flex align-items-center w-100">
-                                                <h3 class="card-title mb-0 flex-grow-1">{{ $class->name }}</h3>
-                                                <span class="badge bg-light text-dark ms-3" style="font-size: 0.9rem;">
-                                                    {{ App\Models\Student::where('class_id', $class->id)->where('school_id', $school->id)->count() }} Students
-                                                </span>
-                                            </div>
-                                            <div class="card-body">
-                                                <p class="mb-0 text-muted">Click to view students</p>
-                                                <p class="mb-0 mt-2 text-success" style="font-size: 1rem;">
-                                                    {{ App\Models\Student::where('class_id', $class->id)->where('school_id', $school->id)->whereNull('photo')->count() }} students without capture photo
-                                                </p>
-                                                 <p class="mb-0 mt-2 text-danger" style="font-size: 1rem;">
-                                                    {{ App\Models\Student::where('class_id', $class->id)->where('school_id', $school->id)->where('idcardprinted', 'no')->count() }} students without printed ID cards
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
+                    <div class="row">
+                        @foreach($classes as $class)
+                        <div class="col-md-4 mb-4">
+                            <a href="{{ route('schools.classes.students', ['school' => $school, 'class' => $class]) }}"
+                                class="text-decoration-none text-dark">
+                                <div class="card h-100 cursor-pointer">
+                                    <div class="card-header bg-primary text-white d-flex align-items-center w-100">
+                                        <h3 class="card-title mb-0 flex-grow-1">{{ $class->name }}</h3>
+                                        <span class="badge bg-light text-dark ms-3" style="font-size: 0.9rem;">
+                                            {{ App\Models\Student::where('class_id', $class->id)->where('school_id',
+                                            $school->id)->count() }} Students
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0 text-muted">Click to view students</p>
+                                        <p class="mb-0 mt-2 text-success" style="font-size: 1rem;">
+                                            {{ App\Models\Student::where('class_id', $class->id)->where('school_id',
+                                            $school->id)->whereNull('photo')->count() }} students without capture photo
+                                        </p>
+                                        <p class="mb-0 mt-2 text-danger" style="font-size: 1rem;">
+                                            {{ App\Models\Student::where('class_id', $class->id)->where('school_id',
+                                            $school->id)->where('idcardprinted', 'no')->count() }} students without
+                                            printed ID cards
+                                        </p>
+                                    </div>
                                 </div>
-                            @endforeach
+                            </a>
                         </div>
+                        @endforeach
+                    </div>
                     @endif
                 </div>
             </div>

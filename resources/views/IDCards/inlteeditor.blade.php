@@ -70,7 +70,7 @@
     border-radius:10px;
     box-shadow:0 2px 10px rgba(0,0,0,.08);
     padding:6px 0 16px;
-    flex-shrink:0;
+    /* flex-shrink:0; */
   }
   .group{
     border-bottom:1px solid var(--line);
@@ -240,7 +240,7 @@
   /* =========== RIGHT PREVIEW =========== */
   .preview-wrap{
     flex:1;
-    min-width:340px;
+    /* min-width:340px; */
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -417,13 +417,20 @@
                         <div class="group">
                         <div class="group-title"><h3>Card Background</h3><span class="chev">▾</span></div>
                         <div class="group-body">
-                                    <div class="field">
-                                        <label for="orientationSelect">Orientation</label>
-                                        <select id="orientationSelect">
-                                            <option value="horizontal" selected>Horizontal</option>
-                                            <option value="vertical">Vertical</option>
-                                        </select>
-                                    </div>
+                            <div class="field">
+                                <label for="orientationSelect">Orientation</label>
+                               <select id="orientationSelect">
+                                    <option value="horizontal"
+                                        {{ ($orientation ?? 'vertical') === 'horizontal' ? 'selected' : '' }}>
+                                        Horizontal
+                                    </option>
+
+                                    <option value="vertical"
+                                        {{ ($orientation ?? 'vertical') === 'vertical' ? 'selected' : '' }}>
+                                        Vertical
+                                    </option>
+                                </select>
+                            </div>
                             <label class="filebtn">Upload card design (portrait or landscape)
                             <input type="file" id="bgUpload" accept="image/*">
                             </label>
@@ -3720,8 +3727,8 @@
 
                         orientation:
                             CARD_W >= CARD_H
-                                ? 'landscape'
-                                : 'portrait',
+                                ? 'horizontal'
+                                : 'vertical',
 
                         card_width:
                             CARD_W,
