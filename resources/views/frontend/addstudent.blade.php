@@ -894,11 +894,11 @@
                                     'admission_no'
                                         => $student->admission_no ?? '',
 
-                                    'class'
-                                        => $student->studentClass->name ?? '',
-
-                                    'section'
-                                        => $student->section->name ?? '',
+                                    'class' => 'Class ' . trim(
+                                        ($student->studentClass->name ?? '') .
+                                        ' - ' .
+                                        ($student->section ?? '')
+                                    ),
 
                                     'dob',
                                     'date_of_birth'
@@ -1221,11 +1221,11 @@
                                     'admission_no'
                                         => $student->admission_no ?? '',
 
-                                    'class'
-                                        => $student->studentClass->name ?? '',
-
-                                    'section'
-                                        => $student->section->name ?? '',
+                                   'class' => 'Class ' .trim(
+                                        ($student->studentClass->name ?? '') .
+                                        ' - ' .
+                                        ($student->section ?? '')
+                                    ),
 
                                     'dob',
                                     'date_of_birth'
