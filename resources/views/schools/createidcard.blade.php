@@ -208,10 +208,13 @@
                                 </select>
                             </div>
                         </div>
+            
                         <div class="col-md-4 mt-4">
                             <div class="form-group mt-1">
-                               <input type="submit" name="submit" value="Generate ID Card" class="btn btn-primary btn-block"
-                               
+                               <a href="{{ route('idcard.print-filtered') }}?{{ request()->getQueryString() }}" 
+                                  class="btn btn-info btn-block" target="_blank">
+                                   <i class="fas fa-print mr-1"></i> Print ID Cards
+                               </a>
                             </div>
                         </div>
                         <!-- <div class="col-md-4"> 

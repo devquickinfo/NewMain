@@ -155,7 +155,75 @@ class IdCardController extends Controller
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
     }
-   
+
+    /**
+     * Print filtered students ID cards using Mainidcard layout
+     */
+    public function printFiltered(Request $request)
+    {
+        $schoolId = Auth::user()->school_id ?? session('viewing_school');
+        
+        $orientation = $request->input('orientation', 'vertical');
+        $orientation = in_array($orientation, ['horizontal', 'vertical']) ? $orientation : 'vertical';
+        
+        // Build student query with filters
+        $students = $this->buildStudentQuery($request, $schoolId)->get();
+        
+        // Get school details
+        $school = School::find($schoolId);
+        
+        // Get Mainidcard design for this orientation
+        $design = Mainidcard::where('school_id', $schoolId)
+            ->where('orientation', $orientation)
+            ->first();
+        
+        // Get sample if no custom design
+        $sample = null;
+        $selectedSampleId = SelectedSample::where('school_id', $schoolId)
+            ->where('orientation', $orientation)
+            ->value('sample_id');
+        
+        if ($selectedSampleId) {
+            $sample = UploadSample::find($selectedSampleId);
+        }
+        
+        // Get filter labels for display
+        $classFilter = '';
+        if ($request->filled('class_id')) {
+            $class = StudentClass::find($request->class_id);
+            $classFilter = $class ? $class->name : '';
+        }
+        
+        $sectionFilter = '';
+        if ($request->filled('section_id')) {
+            $section = Section::find($request->section_id);
+            $sectionFilter = $section ? $section->name : '';
+        }
+        
+        $photoFilter = '';
+        if ($request->filled('photo')) {
+            $photoFilter = $request->photo === 'available' ? 'Photo Available' : 'No Photo';
+        }
+        
+        // Prepare layout
+        $layout = $design?->layout ?? [];
+        
+        return response()
+            ->view('schools.print_filtered_idcards', [
+                'students' => $students,
+                'school' => $school,
+                'design' => $design,
+                'sample' => $sample,
+                'layout' => $layout,
+                'orientation' => $orientation,
+                'classFilter' => $classFilter,
+                'sectionFilter' => $sectionFilter,
+                'photoFilter' => $photoFilter,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
 
     protected function buildStudentQuery(Request $request, $schoolId)
     {

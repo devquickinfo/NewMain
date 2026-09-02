@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
     ->name('idcard.search.students');
     Route::post('/idcard/generate', [IdCardController::class, 'generate'])
     ->name('idcard.generate');
+    Route::get('/idcard/print-filtered', [IdCardController::class, 'printFiltered'])
+    ->name('idcard.print-filtered');
     Route::get('/student/list', [StudentListController::class, 'index'])
     ->name('student.list');
     Route::get('/teacher/list', [TeacherListController::class, 'index'])
