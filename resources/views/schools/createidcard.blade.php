@@ -88,7 +88,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-id-card mr-2"></i>
-                    ID Card Filters
+                    Generate ID Card Filters
                 </h3>
             </div>
 
@@ -128,43 +128,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="background_template">
-                                    Background Template
-                                </label>
-                                <select name="background_template"
-                                        id="background_template"
-                                        class="form-control" onchange="this.form.submit()">>
-                                    <option value="sky_blue"
-                                        {{ request('background_template') == 'sky_blue' ? 'selected' : '' }}>
-                                        Sky Blue
-                                    </option>
-
-                                    <option value="blue"
-                                        {{ request('background_template') == 'blue' ? 'selected' : '' }}>
-                                        Blue
-                                    </option>
-
-                                    <option value="green"
-                                        {{ request('background_template') == 'green' ? 'selected' : '' }}>
-                                        Green
-                                    </option>
-
-                                    <option value="red"
-                                        {{ request('background_template') == 'red' ? 'selected' : '' }}>
-                                        Red
-                                    </option>
-
-                                    <option value="custom"
-                                        {{ request('background_template') == 'custom' ? 'selected' : '' }}>
-                                        Custom
-                                    </option>
-
-                                </select>
-                            </div>
-                        </div>
-
                         <!-- Card Orientation -->
                         <div class="col-md-4">
                             <div class="form-group">
@@ -245,18 +208,24 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-4"> 
+                        <div class="col-md-4 mt-4">
+                            <div class="form-group mt-1">
+                               <input type="submit" name="submit" value="Generate ID Card" class="btn btn-primary btn-block"
+                               
+                            </div>
+                        </div>
+                        <!-- <div class="col-md-4"> 
                           <div class="form-group"> 
                             <label for="student_search">Search Student</label> 
                             <input type="text" name="student_search" id="student_search" class="form-control" placeholder="Name or Admission No" autocomplete="off" value="{{ request('student_search') ?? request('search') }}"> 
                             <small class="text-muted"> Type at least 3 characters </small> 
                            </div> 
-                        </div>
+                        </div> -->
 
 
                     </div>
 
-                    <div class="row">
+                   {{---- <div class="row">
                         <div class="col-md-12">
 
                             <button type="submit"
@@ -272,7 +241,7 @@
                             </a>
 
                         </div>
-                    </div>
+                    </div>---}}
 
                 <!-- </form> -->
 
@@ -281,7 +250,7 @@
 
 
         <!-- Student List -->
-        <div class="card">
+       {{---<div class="card">
 
             <div class="card-header">
                 <h3 class="card-title">
@@ -379,9 +348,9 @@
                     @endif
                 </form>
             </div>
-        </div>
+            </div>
 
-    </div>
+           </div>--}} 
 </section>
 
 
