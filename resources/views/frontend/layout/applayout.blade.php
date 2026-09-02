@@ -31,17 +31,17 @@
 <body class="hold-transition dark-mode sidebar-mini layout-fixed layout-navbar-fixed text-sm">
   
 <div class="wrapper">
-    <nav class="main-header navbar navbar-expand-md navbar-dark">
-    <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    
-    <div class="collapse navbar-collapse" id="navbarCollapse">
-      <div class="d-md-none w-100 text-right mb-2">
-        <button class="btn btn-sm btn-outline-light" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="true" aria-label="Close navigation">
-          <i class="fas fa-times"></i>
-        </button>
-    </div>
+    <nav class="main-header navbar navbar-expand navbar-dark">
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link"
+               data-widget="pushmenu"
+               href="#"
+               role="button">
+                <i class="fas fa-bars"></i>
+            </a>
+        </li>
+    </ul>
     
     <ul class="navbar-nav ml-auto">
       <li class="nav-item d-flex align-items-center">
@@ -198,24 +198,34 @@
                     @endif
                     @if(session('role') === 'superadmin')
                     <li class="nav-item">
-                        <a href="{{ route('student.deleted') }}"
-                        class="nav-link {{ request()->routeIs('student.deleted') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-trash"></i>
-                            <p>Deleted Students</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('upload-samples.index') }}"
-                        class="nav-link {{ request()->routeIs('upload-samples.*') ? 'active' : '' }}">
-
-                            <i class="nav-icon fas fa-id-card"></i>
-
+                        <a href="#" class="nav-link {{ request()->routeIs('student.deleted') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-gear"></i>
                             <p>
-                                Upload Sample
+                            Administration
+                            <i class="right fas fa-angle-left"></i>
                             </p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('student.deleted') }}"
+                                class="nav-link {{ request()->routeIs('student.deleted') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-trash"></i>
+                                    <p>Deleted Students</p>
+                                </a>                  
+        				    </li>
+                            <li class="nav-item">
+                                <a href="{{ route('upload-samples.index') }}"
+                                class="nav-link {{ request()->routeIs('upload-samples.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-id-card"></i>
+                                    <p>
+                                        Upload Sample
+                                    </p>
+                                </a>
+                            </li>
+                         </ul>
                     </li>
                     @endif
+
                    
                   {{---- <li class="nav-item">
                         <a href="{{ route('id-card-templates.index') }}"
