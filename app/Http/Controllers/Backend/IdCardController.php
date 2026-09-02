@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\Mainidcard;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class IdCardController extends Controller
 {
@@ -207,6 +210,281 @@ class IdCardController extends Controller
                 });
             })
             ->orderBy('first_name');
+    }
+     public function uploadDesign(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Get School ID
+        |--------------------------------------------------------------------------
+        */
+
+        $schoolId = Auth::user()?->school_id
+            ?? session('viewing_school');
+
+        if (!$schoolId) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'School not found.'
+            ], 400);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate request
+        |--------------------------------------------------------------------------
+        |
+        | Do NOT use max:1024 here.
+        | We will compress the image to 1 MB ourselves.
+        |
+        */
+
+        $request->validate([
+            'image' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:20480'
+            ],
+
+            'orientation' => [
+                'required',
+                'in:horizontal,vertical'
+            ],
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get uploaded image
+        |--------------------------------------------------------------------------
+        */
+
+        $uploadedFile = $request->file('image');
+
+        $orientation = $request->input('orientation');
+
+        $originalName = $uploadedFile->getClientOriginalName();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Card dimensions
+        |--------------------------------------------------------------------------
+        */
+
+        if ($orientation === 'horizontal') {
+
+            $width = 317;
+            $height = 204;
+
+        } else {
+
+            $width = 204;
+            $height = 317;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Image Manager
+        |--------------------------------------------------------------------------
+        */
+
+        $manager = new ImageManager(
+            new Driver()
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Read Image
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            $image = $manager->read(
+                $uploadedFile->getPathname()
+            );
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to read uploaded image.'
+            ], 422);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resize image exactly
+        |--------------------------------------------------------------------------
+        */
+
+        $image->resize(
+            width: $width,
+            height: $height
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Compress image to <= 1 MB
+        |--------------------------------------------------------------------------
+        */
+
+        $maxSize = 1024 * 1024; // 1 MB
+
+        $quality = 90;
+
+        do {
+
+            $encoded = $image->toJpeg($quality);
+
+            $size = strlen($encoded);
+
+            $quality -= 5;
+
+        } while (
+            $size > $maxSize &&
+            $quality >= 20
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check final size
+        |--------------------------------------------------------------------------
+        */
+
+        if ($size > $maxSize) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to reduce image below 1 MB.'
+            ], 422);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate filename
+        |--------------------------------------------------------------------------
+        */
+
+        $filename = uniqid('sample_') . '.jpg';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Storage path
+        |--------------------------------------------------------------------------
+        */
+
+        $path = 'samples/' . $schoolId . '/' . $filename;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Save image
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            Storage::disk('public')->put(
+                $path,
+                (string) $encoded
+            );
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to save image.'
+            ], 500);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Insert into upload_samples
+        |--------------------------------------------------------------------------
+        */
+
+        $sample = UploadSample::create([
+            'school_id' => $schoolId,
+            'name' => $originalName,
+            'file_path' => $path,
+            'orientation' => $orientation,
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Set uploaded sample as selected sample
+        |--------------------------------------------------------------------------
+        */
+
+        $selectedSample = SelectedSample::updateOrCreate(
+
+            [
+                'school_id' => $schoolId,
+                'orientation' => $orientation,
+            ],
+
+            [
+                'sample_id' => $sample->id,
+            ]
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Image URL
+        |--------------------------------------------------------------------------
+        */
+
+        $imageUrl = Storage::disk('public')->url(
+            $path
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return JSON
+        |--------------------------------------------------------------------------
+        */
+
+        return response()->json([
+
+            'success' => true,
+
+            'message' => 'Card design uploaded successfully.',
+
+            'sample_id' => $sample->id,
+
+            'name' => $sample->name,
+
+            'path' => $sample->file_path,
+
+            'url' => $imageUrl,
+
+            'orientation' => $orientation,
+
+            'width' => $width,
+
+            'height' => $height,
+
+            'size' => round($size / 1024, 2) . ' KB',
+
+            'selected_sample_id' => $selectedSample->id,
+
+        ]);
     }
 }
 

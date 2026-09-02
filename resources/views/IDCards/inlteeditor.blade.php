@@ -3926,6 +3926,137 @@
 
 
 })();
-</script>
 
+</script>
+<script>
+document.getElementById('bgUpload').addEventListener('change', function () {
+
+    const file = this.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const orientationSelect = document.getElementById('orientationSelect');
+
+    if (!orientationSelect) {
+        console.error('orientationSelect not found');
+        return;
+    }
+
+    const orientation = orientationSelect.value;
+
+    console.log('Selected file:', file);
+    console.log('Orientation:', orientation);
+
+    // Create FormData
+    const formData = new FormData();
+
+    formData.append('image', file);
+    formData.append('orientation', orientation);
+
+    // Debug FormData
+    console.log('----- FormData -----');
+
+    for (const [key, value] of formData.entries()) {
+
+        if (value instanceof File) {
+            console.log(key, {
+                name: value.name,
+                size: value.size,
+                type: value.type
+            });
+        } else {
+            console.log(key, value);
+        }
+    }
+
+    console.log('-------------------');
+
+    // Disable input while uploading
+    this.disabled = true;
+
+    fetch("{{ route('id-card.upload-design') }}", {
+        method: 'POST',
+
+        headers: {
+            'X-CSRF-TOKEN': document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute('content'),
+
+            'Accept': 'application/json'
+        },
+
+        body: formData
+    })
+    .then(async response => {
+
+        const data = await response.json();
+
+        console.log('HTTP Status:', response.status);
+        console.log('Server Response:', data);
+
+        if (!response.ok) {
+
+            if (data.errors) {
+                console.error('Validation Errors:', data.errors);
+            }
+
+            throw new Error(
+                data.message || 'Upload failed.'
+            );
+        }
+
+        return data;
+    })
+    .then(data => {
+
+        if (data.success) {
+
+            console.log('Upload successful:', data);
+
+            alert(data.message);
+
+            // Update preview if element exists
+            const cardBackground =
+                document.getElementById('cardBackground');
+
+            if (cardBackground && data.url) {
+
+                cardBackground.style.backgroundImage =
+                    `url("${data.url}")`;
+
+                cardBackground.style.backgroundSize = 'cover';
+                cardBackground.style.backgroundPosition = 'center';
+            }
+
+            // Optional: show returned information
+            console.log('Sample ID:', data.sample_id);
+            console.log('Image URL:', data.url);
+            console.log('Image size:', data.size);
+            console.log('Orientation:', data.orientation);
+            const orientation = data.orientation;
+
+             window.location.href =
+            `http://localhost:8001/idcard-editor?orientation=${encodeURIComponent(orientation)}`;
+
+
+        }
+
+    })
+    .catch(error => {
+
+        console.error('Upload Error:', error);
+
+        alert(error.message || 'Something went wrong while uploading.');
+
+    })
+    .finally(() => {
+
+        document.getElementById('bgUpload').disabled = false;
+
+    });
+
+});
+</script>
 @endsection

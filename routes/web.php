@@ -127,5 +127,8 @@ Route::middleware('auth')->group(function () {
     Route::get('idcard-editor', [IdCardController::class, 'editIDCard'])->name('idcard.editor');
 
     Route::post('/mainidcard/save',[MainidcardController::class, 'store'])->name('mainidcard.store');
+     //user upload id card from editor
+    Route::post('/id-card/upload-design', [IDCardController::class, 'uploadDesign'])
+    ->name('id-card.upload-design');
 
 });
